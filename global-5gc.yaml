@@ -1,0 +1,30 @@
+
+networks:
+  subnet_sbi:
+    ipam:
+      config:
+        - subnet: ${SUBNET_SBI}
+  subnet_n2:
+    ipam:
+      config:
+        - subnet: ${SUBNET_N2}
+  subnet_n3:
+    ipam:
+      config:
+        - subnet: ${SUBNET_N3}
+  subnet_n4:
+    ipam:
+      config:
+        - subnet: ${SUBNET_N4}
+  subnet_n6:
+    ipam:
+      config:
+        - subnet: ${SUBNET_N6}
+  subnet_uu:
+    ipam:
+      config:
+        - subnet: ${SUBNET_UU}
+
+volumes:
+  mongodbdata: {}
+

@@ -1,0 +1,25 @@
+#FROM docker_open5gs:web_builder AS builder
+FROM docker_open5gs:webui_2024 AS builder
+FROM docker_open5gs:provenance
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV LD_LIBRARY_PATH=/open5gs/install/lib/x86_64-linux-gnu
+
+ENV http_proxy=
+ENV https_proxy=
+ENV no_proxy=
+ENV HTTP_PROXY=
+ENV HTTPS_PROXY=
+ENV NO_PROXY=
+
+COPY --from=builder /open5gs/install/bin /open5gs/install/bin
+COPY --from=builder /open5gs/install/etc /open5gs/install/etc
+COPY --from=builder /open5gs/install/include /open5gs/install/include
+COPY --from=builder /open5gs/install/lib /open5gs/install/lib
+COPY --from=builder /open5gs/webui /open5gs/webui
+
+# Set the working directory to open5gs
+WORKDIR open5gs
+
+COPY open5gs_init.sh /
+CMD /open5gs_init.sh

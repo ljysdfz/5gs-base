@@ -1,0 +1,12 @@
+networks:
+  subnet_n2:
+    external: true
+    name: ctri_subnet_n2
+  subnet_n3:
+    external: true
+    name: ctri_subnet_n3
+  subnet_uu:
+    ipam:
+      config:
+        - subnet: ${SUBNET_UU}
+

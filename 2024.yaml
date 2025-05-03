@@ -1,0 +1,48 @@
+version: '3'
+services:
+  mongo:
+    build: ./mongo
+    image: docker_mongo
+    container_name: mongo
+    volumes:
+      - ./mongo:/mnt/mongo
+      - mongodbdata:/var/lib/mongodb
+    expose:
+      - "27017/udp"
+      - "27017/tcp"
+    networks:
+      default:
+        ipv4_address: 10.5.5.253
+  webui:
+    image: docker_open5gs
+    container_name: webui
+    depends_on:
+      - mongo
+    environment:
+      - TZ=Asia/Shanghai
+      - COMPONENT_NAME=webui
+      - MONGO_IP=10.5.5.253
+      - Flag4=PCL{9957fadd3c28674fe4ef4797655a0765}
+      - Flag5=PCL{d9dce009d6d617714b14bb492edddf97}
+      - PURGE_COMMAND=/purge_subscribers
+      - POPULATE_COMMAND=/populate_subscribers
+      - WEB_ADMIN_PASSWORD=pK4=nH0+kS3#kX0-cX
+      - PLATFORM=UDM\ subscription\ management
+      - SOURCE_CODE_PACKAGE=www.zip
+    volumes:
+      - ./webui:/mnt/webui
+      - ./tamper:/mnt/tamper
+    expose:
+      - "80/tcp"
+    ports:
+      - "80:80/tcp"
+    networks:
+      default:
+        ipv4_address: 10.5.5.254
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 10.5.5.0/24
+volumes:
+  mongodbdata: {}

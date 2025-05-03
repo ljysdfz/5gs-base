@@ -1,0 +1,25 @@
+version: '3'
+services:
+  nr_gnb:
+    image: docker_ueransim_gnb
+    container_name: nr_gnb
+    stdin_open: true
+    tty: true
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    expose:
+      - "38412/sctp"
+      - "2152/udp"
+      - "4997/udp"
+    cap_add:
+      - NET_ADMIN
+    privileged: true
+    networks:
+      default:
+        ipv4_address: 172.22.0.23
+networks:
+  subnet_5gc:
+    external:
+      name: subnet_5gc
+

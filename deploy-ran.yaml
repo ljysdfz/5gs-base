@@ -1,0 +1,61 @@
+services:
+  gnb:
+    image: ctri-ran:gnb
+    container_name: gnb
+    env_file:
+      - env-plmn.sh
+      - env-n2.sh
+      - env-n3.sh
+      - env-uu.sh
+    stdin_open: true
+    tty: true
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - ./ueransim-gnb:/mnt/gnb
+    expose:
+      - "38412/sctp"
+      - "2152/udp"
+      - "4997/udp"
+    cap_add:
+      - NET_ADMIN
+    networks:
+      subnet_n2:
+        ipv4_address: ${GNB_N2_IP}
+      subnet_n3:
+        ipv4_address: ${GNB_N3_IP}
+      subnet_uu:
+        ipv4_address: ${GNB_UU_IP}
+    command:
+      bash -c "cp /mnt/gnb/gnb* . && ./gnb-init.sh && rm ./gnb-init.sh && ./gnb -c gnb.yaml"
+
+  ue:
+    image: ctri-ran:ue
+    depends_on:
+      - gnb
+    container_name: ue
+    env_file:
+      - env-plmn.sh
+      - env-ue.sh
+      - env-uu.sh
+    stdin_open: true
+    tty: true
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - ./ueransim-ue:/mnt/ue
+    expose:
+      - "4997/udp"
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+    networks:
+      subnet_uu:
+        ipv4_address: ${UE_UU_IP}
+    command:
+      bash -c "cp /mnt/ue/ue* . && ./ue-init.sh && rm ./ue-init.sh && ./ue -c ue.yaml"
+
+networks:
+  subnet_n2:
+  subnet_n3:
+  subnet_uu:

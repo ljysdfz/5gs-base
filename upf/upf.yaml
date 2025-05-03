@@ -1,0 +1,22 @@
+logger:
+    file: /open5gs/install/var/log/open5gs/upf.log
+
+parameter:
+
+upf:
+    pfcp:
+      - addr: #UPF_N4_IP#
+    gtpu:
+      - addr: #UPF_N3_IP#
+        advertise: #UPF_ADVERTISE_IP#
+    subnet:
+      - addr: 192.168.100.1/24
+        dnn: internet
+        dev: ogstun
+      - addr: 192.168.101.1/24
+        dnn: ims
+        dev: ogstun2
+
+smf:
+    pfcp:
+      - addr: #SMF_N4_IP#

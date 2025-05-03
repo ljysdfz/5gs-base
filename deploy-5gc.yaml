@@ -1,0 +1,289 @@
+services:
+  mongo:
+    build: ./mongo
+    image: ctri-mongo
+    container_name: mongo
+    env_file:
+      - env-plmn.sh
+      - env-sbi.sh
+    volumes:
+      - ./mongo:/mnt/mongo
+      - mongodbdata:/var/lib/mongodb
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    expose:
+      - "27017/udp"
+      - "27017/tcp"
+    networks:
+      subnet_sbi:
+        ipv4_address: ${MONGO_IP}
+  webui:
+    image: ctri-5gc
+    container_name: webui
+    depends_on:
+      - mongo
+    env_file:
+      - env-plmn.sh
+      - env-sbi.sh
+    environment:
+      - COMPONENT_NAME=webui
+    volumes:
+      - ./webui:/mnt/webui
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    expose:
+      - "3000/tcp"
+    ports:
+      - "3000:3000/tcp"
+    networks:
+      subnet_sbi:
+        ipv4_address: ${WEBUI_IP}
+  nrf:
+    image: ctri-5gc
+    container_name: nrf
+    env_file:
+      - env-plmn.sh
+      - env-sbi.sh
+    environment:
+      - COMPONENT_NAME=nrf-1
+    volumes:
+      - ./nrf:/mnt/nrf
+      - ./log:/open5gs/install/var/log/open5gs
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    expose:
+      - "7777/tcp"
+    networks:
+      subnet_sbi:
+        ipv4_address: ${NRF_IP}
+  ausf:
+    image: ctri-5gc
+    depends_on:
+      - nrf
+    container_name: ausf
+    env_file:
+      - env-plmn.sh
+      - env-sbi.sh
+    environment:
+      - COMPONENT_NAME=ausf-1
+    volumes:
+      - ./ausf:/mnt/ausf
+      - ./log:/open5gs/install/var/log/open5gs
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    expose:
+      - "7777/tcp"
+    networks:
+      subnet_sbi:
+        ipv4_address: ${AUSF_IP}
+  udr:
+    image: ctri-5gc
+    depends_on:
+      - nrf
+      - mongo
+    container_name: udr
+    env_file:
+      - env-plmn.sh
+      - env-sbi.sh
+    environment:
+      - COMPONENT_NAME=udr-1
+    volumes:
+      - ./udr:/mnt/udr
+      - ./log:/open5gs/install/var/log/open5gs
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    expose:
+      - "7777/tcp"
+    networks:
+      subnet_sbi:
+        ipv4_address: ${UDR_IP}
+  udm:
+    image: ctri-5gc
+    depends_on:
+      - nrf
+    container_name: udm
+    env_file:
+      - env-plmn.sh
+      - env-sbi.sh
+    environment:
+      - COMPONENT_NAME=udm-1
+    volumes:
+      - ./udm:/mnt/udm
+      - ./log:/open5gs/install/var/log/open5gs
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    expose:
+      - "7777/tcp"
+    networks:
+      subnet_sbi:
+        ipv4_address: ${UDM_IP}
+  smf:
+    image: ctri-5gc
+    depends_on:
+      - nrf
+    container_name: smf
+    env_file:
+      - env-plmn.sh
+      - env-sbi.sh
+      - env-n4.sh
+    environment:
+      - COMPONENT_NAME=smf-1
+    volumes:
+      - ./smf:/mnt/smf
+      - ./log:/open5gs/install/var/log/open5gs
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    expose:
+      - "3868/udp"
+      - "3868/tcp"
+      - "3868/sctp"
+      - "5868/udp"
+      - "5868/tcp"
+      - "5868/sctp"
+      - "8805/udp"
+      - "2123/udp"
+      - "7777/tcp"
+    networks:
+      subnet_sbi:
+        ipv4_address: ${SMF_SBI_IP}
+      subnet_n4:
+        ipv4_address: ${SMF_N4_IP}
+  upf:
+    image: ctri-5gc
+    depends_on:
+      - nrf
+      - smf
+    container_name: upf
+    env_file:
+      - env-plmn.sh
+      - env-n3.sh
+      - env-n4.sh
+      - env-n6.sh
+    environment:
+      - COMPONENT_NAME=upf-1
+    volumes:
+      - ./upf:/mnt/upf
+      - ./log:/open5gs/install/var/log/open5gs
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    expose:
+      - "2152/udp"
+      - "8805/udp"
+    ports:
+      - "2152:2152/udp"
+    cap_add:
+      - NET_ADMIN
+    privileged: true
+    networks:
+      subnet_n3:
+        ipv4_address: ${UPF_N3_IP}
+      subnet_n4:
+        ipv4_address: ${UPF_N4_IP}
+      subnet_n6:
+        ipv4_address: ${UPF_N6_IP}
+  amf:
+    image: ctri-5gc
+    depends_on:
+      - smf
+      - upf
+      - nrf
+      - ausf
+      - udm
+      - udr
+      - pcf
+      - bsf
+    container_name: amf
+    env_file:
+      - env-plmn.sh
+      - env-sbi.sh
+      - env-n2.sh
+    environment:
+      - COMPONENT_NAME=amf-1
+    volumes:
+      - ./amf:/mnt/amf
+      - ./log:/open5gs/install/var/log/open5gs
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    expose:
+      - "38412/sctp"
+      - "7777/tcp"
+    ports:
+      - "38412:38412/sctp"
+    networks:
+      subnet_sbi:
+        ipv4_address: ${AMF_SBI_IP}
+      subnet_n2:
+        ipv4_address: ${AMF_N2_IP}
+  pcf:
+    image: ctri-5gc
+    depends_on:
+      - nrf
+      - mongo
+    container_name: pcf
+    env_file:
+      - env-plmn.sh
+      - env-sbi.sh
+    environment:
+      - COMPONENT_NAME=pcf-1
+    volumes:
+      - ./pcf:/mnt/pcf
+      - ./log:/open5gs/install/var/log/open5gs
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    expose:
+      - "7777/tcp"
+    networks:
+      subnet_sbi:
+        ipv4_address: ${PCF_IP}
+  bsf:
+    image: ctri-5gc
+    depends_on:
+      - nrf
+      - mongo
+    container_name: bsf
+    env_file:
+      - env-plmn.sh
+      - env-sbi.sh
+    environment:
+      - COMPONENT_NAME=bsf-1
+    volumes:
+      - ./bsf:/mnt/bsf
+      - ./log:/open5gs/install/var/log/open5gs
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    expose:
+      - "7777/tcp"
+    networks:
+      subnet_sbi:
+        ipv4_address: ${BSF_IP}
+  nssf:
+    image: ctri-5gc
+    depends_on:
+      - nrf
+      - mongo
+    container_name: nssf
+    env_file:
+      - env-plmn.sh
+      - env-sbi.sh
+    environment:
+      - COMPONENT_NAME=nssf-1
+    volumes:
+      - ./nssf:/mnt/nssf
+      - ./log:/open5gs/install/var/log/open5gs
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    expose:
+      - "7777/tcp"
+    networks:
+      subnet_sbi:
+        ipv4_address: ${NSSF_IP}
+
+networks:
+  subnet_sbi:
+  subnet_n2:
+  subnet_n3:
+  subnet_n4:
+  subnet_n6:
+
+volumes:
+  mongodbdata:
